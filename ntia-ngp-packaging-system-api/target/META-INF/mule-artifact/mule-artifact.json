@@ -1,0 +1,32 @@
+{
+  "configs": [
+    "global-config.xml",
+    "ntia-npg-packaging-system-api.xml",
+    "ntia-ngp-packaging-system-impl.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:ntia-ngp-packaging-system-api:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.4.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "log4j2.xml",
+        "configurations/configuration.dev.yaml",
+        "configurations/configuration-secure.dev.yaml",
+        "global-config.xml",
+        "application-types.xml",
+        "ntia-ngp-packaging-system-impl.xml",
+        "chkeystore.jks",
+        "ntia-npg-packaging-system-api.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

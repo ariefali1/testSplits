@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	
+	
+		<sub-flow name="ntia-ngp-packaging-task" doc:id="d5e21c40-de0e-4e3f-8a53-25b8cd92c7d5" >
+		<logger level="INFO" doc:name="start ntia-ngp-packaging-task" doc:id="087a3257-6dfb-4ac7-bf06-04d89b232d54" message="start ntia-ngp-packaging"/>
+		<http:request method="POST" doc:name="POST NGP Packaging Call" doc:id="4fe3c102-45e7-4833-9bc9-06bde83f3ea6" config-ref="HTTPS_Internal_Request_configuration" path='#[p("ngp-exp-request.baseUrl")]' sendBodyMode="NEVER">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	client_secret : "${secure::ngp-exp-request.client_secret}",
+	client_id : "${secure::ngp-exp-request.client_id}"
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="Log payload" doc:id="bd5bda13-7055-44b3-90ee-bd46fdfb6420" message="#[payload]"/>
+		<logger level="INFO" doc:name="end ntia-ngp-packaging-task" doc:id="8549dbc6-112c-443b-ae44-a855c167cd8f" message="end ntia-ngp-packaging-task"/>
+		
+	</sub-flow>
+	
+	
+	</mule>

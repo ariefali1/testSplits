@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<sub-flow name="sf-query-subFlow" doc:id="278b7339-31ea-44be-bb7e-79c7717e42f3" >
+		<choice doc:name="Choice" doc:id="be367f93-dd18-494d-966a-548b2e6aaa32" >
+			<when expression='#[vars.sfQuery != ""]'>
+				<salesforce:query doc:name="Query" doc:id="abe50ac5-b948-4919-a96e-6104c7e1ad97" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[#[vars.sfQuery]]]></salesforce:salesforce-query>
+		</salesforce:query>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="4264a676-9b73-4f2e-8a6e-9b761d64e8f8" message="No query to execute"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="getGrantInfo" doc:id="77c01e48-36cd-4271-b998-467acf17b8db" >
+		<logger level="INFO" doc:name="Logger" doc:id="894756fa-1558-49ef-b4ca-0b91a2ad8c00" />
+		<ee:transform doc:name="Transform Message" doc:id="ea020744-2807-4e5f-ae86-7713e1ab7d49" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="vAgg" ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="sfQuery" ><![CDATA[%dw 2.0
+output application/json
+---
+"SELECT Id, Name FROM outfunds__Funding_Request__c where outfunds__Status__c = 'Review Completed - with Planning Money Requested'"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="62d891f5-dd7a-4c33-8e88-e7b49d2f4bb5" name="sf-query-subFlow" />
+		<foreach doc:name="For Each" doc:id="d682575a-d732-4e46-80a6-9ef0b12673e0" collection="#[payload]">
+			<ee:transform doc:name="Select all accepted requirements" doc:id="2b12e493-a04a-45df-bc6b-76b89f711d3d">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="sfQuery"><![CDATA[%dw 2.0
+output application/json
+
+
+var qry = "SELECT Id, OwnerId, outfunds__Assigned__c, outfunds__Completed_Date__c, outfunds__Disbursement__c, outfunds__Due_Date__c, outfunds__Funding_Request__c, outfunds__Primary_Contact__c, outfunds__Requirements__c, outfunds__Status__c, outfunds__Type__c,  Funding_Program_Name__c, Applicant_Entity_Type__c FROM outfunds__Requirement__c  where outfunds__Status__c= 'Accepted' AND outfunds__Funding_Request__c = '" ++ payload.Id ++ "'"
+---
+qry]]></ee:set-variable>
+				<ee:set-variable variableName="requirementId"><![CDATA[%dw 2.0
+output application/java
+---
+payload.Id]]></ee:set-variable>
+				<ee:set-variable variableName="requirementName"><![CDATA[%dw 2.0
+output application/json
+---
+payload.Name]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<flow-ref doc:name="Flow Reference" doc:id="824e5bb7-e2dc-47cb-a402-8117ddd0d5e8" name="sf-query-subFlow" />
+			<ee:transform doc:name="contentLink" doc:id="74deb351-7bd4-4ce9-81fc-acba0d816535">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="sfQuery"><![CDATA[%dw 2.0
+output application/json
+---
+if (!isEmpty(payload.Id)) "SELECT ContentDocumentId FROM ContentDocumentLink where linkedEntityId in ('" as String ++ (payload.Id joinBy "','") ++ "')" else ""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<flow-ref doc:name="Flow Reference" doc:id="aca049ff-f744-48bc-84a9-14847fb4fda6" name="sf-query-subFlow" />
+			<ee:transform doc:name="ContentDocument" doc:id="ddaf23a8-406e-4ef0-9158-18d3d5dd66ce">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="sfQuery"><![CDATA[%dw 2.0
+output application/json
+
+---
+if (!isEmpty(payload.ContentDocumentId)) "SELECT LatestPublishedVersionId FROM ContentDocument where Id in ('" as String ++ (payload.ContentDocumentId joinBy "','") ++ "')" else ""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<flow-ref doc:name="Flow Reference" doc:id="ec837d48-2069-43de-ac2d-db6ee34485c6" name="sf-query-subFlow" />
+			<ee:transform doc:name="datawithAttachments" doc:id="9d9694a0-9e7a-4786-9f62-100a41b5a7f5">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="sfQuery"><![CDATA[%dw 2.0
+output application/json
+---
+if (!isEmpty(payload.LatestPublishedVersionId)) "SELECT Id, ContentDocumentId, IsLatest, ContentUrl, ContentBodyId, VersionNumber, Title, Description, ReasonForChange, SharingOption, SharingPrivacy, PathOnClient, RatingCount,TagCsv, FileType, PublishStatus, VersionData, ContentSize, FileExtension, FirstPublishLocationId, Origin, NetworkId, ContentLocation,  File_Rename_fileupload__c FROM ContentVersion where id in ('" as String ++ (payload.LatestPublishedVersionId joinBy "','") ++ "')" else ""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<flow-ref doc:name="Flow Reference" doc:id="ba5fb90d-e822-4eca-969d-f20726a5ea5d" name="sf-query-subFlow" target="finalPayload" />
+			<ee:transform doc:name="Aggregation" doc:id="f3416e00-656f-43d3-a9f5-e181ada0eabc" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="vAgg" ><![CDATA[%dw 2.0 
+output application/json 
+var files = vars.finalPayload map {
+    "fileName": $.Title,
+    "fileType": $.fileType,
+    "fN": $.Title,
+    "content": $.VersionData
+                    }
+var fP =       vars.finalPayload map {
+    "fileName": $.Title,
+    "fileType": $.FileType,
+    "fN": $.Title,
+    "content": $.VersionData,
+"RequirementId": vars.requirementId,
+"RequirementName": vars.requirementName
+                    }
+ 
+reduce ($ ++ $$)             
+--- 
+if (!isEmpty(fP)) vars.vAgg + fP else vars.vAgg]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="49370d01-fce1-44b2-a0c0-d106ad0575b3">
+			<ee:message>
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var files = vars.vAgg map {
+    "fileName": $.fileName,
+    "fileType": $.fileType,
+    "fN": $.fN,
+    "content": $.content
+    }                
+---
+
+ vars.vAgg map {
+    "fileName": $.fileName,
+    "fileType": $.FileType,
+    "fN": $.fN,
+    "content": $.content,
+"RequirementId": vars.requirementId,
+"RequirementName": vars.requirementName
+                    }
+ 
+reduce ($ ++ $$)
+ ]]></ee:set-payload>
+			</ee:message>
+				<ee:variables>
+				</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="03fd3a2a-44c9-4afb-8f83-8c82b45423b1" />
+	</sub-flow>
+	</mule>

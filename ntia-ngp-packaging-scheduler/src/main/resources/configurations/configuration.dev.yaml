@@ -1,0 +1,16 @@
+ngp-exp-request:
+  baseUrl: "/experience/polling/api/grants/ntiaGrant"
+  
+https:
+  internal:
+    host: "localhost"
+    port: "8092"
+ 
+scheduler:
+  ntia-ngp:
+    schedule: "0 0 3,7,11,15,19 ? * * *"
+    timezone: "US/Pacific"
+    taskList: "[\"ntia-ngp-packaging-task\"]"
+    parallelExecution: "false"
+    
+    

@@ -1,0 +1,7 @@
+ngp-exp-request:
+  https:
+    insecure: "true"
+    truststore:
+      password: "![vXU6kVqqkyappZHqSxmFdg==]"
+  client_id: ""
+  client_secret: ""

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<apikit:config outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="f0e26b97-638d-4b0b-ac34-cd3b81ff4eac" name="ntia-npg-packaging-system-api-config" api="resource::7e541c4e-ee0b-46e8-b1fd-f4525f931549:ntia-npg-packaging-system-api:0.0.2:oas:zip:ntia-npg-packaging-system-api.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="61243a35-1808-47c9-9a6d-1f983f17070d" file="configurations/configuration.${mule.env}.yaml" />
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="23b29d46-7cbc-4ade-8d67-165fac8c4696" >
+		<salesforce:basic-connection username="${secure::ngp.salesforce.username}" password="${secure::ngp.salesforce.password}" securityToken="${secure::ngp.salesforce.securityToken}" url="${secure::ngp.salesforce.url}" />
+	</salesforce:sfdc-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="1ae6c456-1b78-4ac0-b9e3-a79f0c369e0a" file="configurations/configuration-secure.${mule.env}.yaml" key="${mule.key}" />
+	<http:listener-config name="ntia-ngp-packaging-system-api-httpListenerConfig" doc:name="HTTP Listener config" doc:id="90c8be89-02fd-4cf4-ba4a-1cbfb3b0395a" >
+		<http:listener-connection host="0.0.0.0" port="${https.private.port}" tlsContext="HTTPS_Request_TLS_Context" readTimeout="${https.timeout}" protocol="HTTPS"/>
+	</http:listener-config>
+	<tls:context name="HTTPS_Request_TLS_Context" doc:name="TLS Context" doc:id="07aa8e60-736a-4a4e-b5ec-d30493471162" >
+		<tls:key-store keyPassword="${secure::https.keystore.key.password}" password="${secure::https.keystore.password}" type="jks" path="chkeystore.jks"/>
+	</tls:context>
+</mule>

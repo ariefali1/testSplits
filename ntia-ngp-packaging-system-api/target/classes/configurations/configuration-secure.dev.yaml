@@ -1,0 +1,14 @@
+ngp:
+  salesforce:
+      username: "![QlZqwsioDAvUGaa5cYevJXahbtZM1UmBlzrTfwN3b4IUdCKdkiQQmUcbKEyT5DbgmivYZzYEWILILIj/gU0a9Q==]"
+      password: "![GbPgdLTO2puMbGEQ5/QyUmAB11LzaGrJlVK16kiT85U=]"
+      securityToken: "![BocRn4ZziKSKc5ZdRH+a7lFNwHbLqHVTSGSRWRB0wyM=]"
+      url: "![7KFu9y4WYrj4ZHAmswBjvvTil9AB6lATcwyAptpjX7VI1p0BrzEtcjtyjWztr24YpCTYrR1ypGj2go4WjOqvRJJydHogaEFDydH90Q7Nsw0=]"
+      
+      
+https:
+  keystore:
+    password: "![vXU6kVqqkyappZHqSxmFdg==]"
+    key:
+      password: "![n/ALlOsSMIYEUd1Yj7AB3Wan4N2zrGhBlLT+1936D+M=]"
+      

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+	
+	
+	<flow name="scheduler-ntia-ngp" doc:id="5a32d77d-049e-4935-8eb9-997e45494778" >
+		<scheduler doc:name="scheduler-ntia-ngp" doc:id="0a3aace9-f5b0-4d28-8a56-47817e88dab7">
+			<scheduling-strategy>
+				<cron expression="${scheduler.ntia-ngp.schedule}" timeZone="${scheduler.ntia-ngp.timezone}" />
+			</scheduling-strategy>
+		</scheduler>
+		<flow-ref doc:name="scheduler-ntia-ngp-subflow" doc:id="3a69be05-c527-4ccc-adb1-85bb483432cc" name="scheduler-ntia-ngp-subflow"/>
+	</flow>
+	<sub-flow name="scheduler-ntia-ngp-subflow" doc:id="bc0497b6-a8d4-4b5b-921a-6a70f833f131" >
+		<logger level="INFO" doc:name="scheduler-ntia-ngp" doc:id="2b3f60c7-b101-49de-a2cf-3fe6e5e93b6a" message="scheduler-ntia-ngp" />
+		<set-variable value='#[p("scheduler.ntia-ngp.parallelExecution") as Boolean]' doc:name="parallelExec" doc:id="dedc258e-7ec4-4fd2-b776-44b781f7772e" variableName="parallelExec" />
+		<logger level="INFO" doc:name="Logger Scheduler" doc:id="b06a8a39-2a54-4293-8a8e-2000323c9f2d" message="#[&quot;Schedule: &quot;++ p('scheduler.ntia-ngp.schedule')]" />
+		<set-variable value='#[p("scheduler.ntia-ngp.taskList")]' doc:name="taskList" doc:id="41bde3f4-f430-4a14-866a-22105a978f8e" variableName="taskList" />
+		<flow-ref doc:name="scheduler-task-execution" doc:id="ef44223e-01fe-4ffa-8383-c069f4a9f1c1" name="scheduler-task-execution" />
+		<logger level="INFO" doc:name="End scheduler-collibra-edsc" doc:id="452323d5-9881-456a-96bc-6a302b616c79" message="End scheduler-ntia-ngp" />
+	</sub-flow>
+	<flow name="scheduler-task-execution" doc:id="92a0c70a-2a94-4bbb-9ebb-db56e024bbf0" >
+		<ee:dynamic-evaluate doc:name="Interpret the task list " doc:id="db7245d7-0dbb-43c0-9614-ea322e2eac14" expression="#[vars.taskList]"/>
+		<choice doc:name="Choice" doc:id="abb0308f-1a88-489a-b057-ea40e821d929" >
+			<when expression="#[vars.parallelExec]">
+				<parallel-foreach doc:name="Parallel For Each" doc:id="a4ccc1e8-be1d-4b91-8e5d-48c8e37f53e6" >
+										<try doc:name="Try" doc:id="686a56d5-1f8f-4b1e-890b-fe628c47626e" >
+						<flow-ref doc:name="Call the flow defined by payload" doc:id="9c71b59b-aff7-4397-b2b4-3a8790f9b8f3" name="#[payload]" />
+						<error-handler >
+							<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f4b94e10-aea7-4c74-af3e-3b864642ec7d" >
+								<ee:transform doc:name="Error Response Payload" doc:id="b2580571-5c43-49bf-9b0a-806f8595a144" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": {
+		"IntegrationStatus": "Failure",
+		"ErrorType": error.errorType.namespace ++ ":" ++ error.errorType.identifier default "NOT AVAILABLE",
+		ErrorCode: error.exception.errorMessage.attributes.statusCode default 500,
+		"ErrorMessage": error.exception.errorMessage.attributes.reasonPhrase  default (error.detailedDescription default "NOT AVAILABLE"),
+	}
+}]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+								<logger level="INFO" doc:name="Log Generic Errors" doc:id="99baebc5-0c4e-41eb-a5c4-b4d811e54743" message="#[payload]"/>
+							</on-error-continue>
+						</error-handler>
+					</try>
+				</parallel-foreach>
+			</when>
+			<otherwise >
+				<foreach doc:name="For Each - sequential" doc:id="43036193-d327-4926-9fb2-82686c4a411f">
+								<try doc:name="Try" doc:id="e392e375-2115-4548-81ec-cd7b34d4bd5a" >
+						<flow-ref doc:name="Call the flow defined by payload" doc:id="13c962a7-01c0-4698-a4a2-1295bca9901b" name="#[payload]" />
+						<error-handler >
+							<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3aed804a-e206-4246-a330-04026ced89e1" >
+								<ee:transform doc:name="Error Response Payload" doc:id="7ceb1c54-2408-4b37-8f23-2dc6572476ac" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": {
+		"IntegrationStatus": "Failure",
+		"ErrorType": error.errorType.namespace ++ ":" ++ error.errorType.identifier default "NOT AVAILABLE",
+		ErrorCode: error.exception.errorMessage.attributes.statusCode default 500,
+		"ErrorMessage": error.exception.errorMessage.attributes.reasonPhrase  default (error.detailedDescription default "NOT AVAILABLE"),
+	}
+}]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+								<logger level="INFO" doc:name="Log Generic Errors" doc:id="9c24dd50-9bc4-4cab-906c-26f85d43d6f4" message="#[payload]"/>
+							</on-error-continue>
+						</error-handler>
+					</try>
+		</foreach>
+			</otherwise>
+		</choice>
+	</flow>
+	
+	
+	
+	
+</mule>
